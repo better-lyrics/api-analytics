@@ -37,7 +37,7 @@ export function StatusGrid({ snapshot, ready }: StatusGridProps) {
       {/* Circuit Breaker */}
       <div className="card p-5 fade-in" style={{ animationDelay: "350ms" }}>
         <div className="flex items-start justify-between mb-2">
-          <Tooltip content="Protection mechanism that stops requests to failing services. CLOSED = healthy, OPEN = blocking requests, HALF_OPEN = testing recovery.">
+          <Tooltip content="Protection mechanism that stops requests to failing services. Healthy = normal operation, Tripped = blocking requests, Recovering = testing if service is back.">
             <span className="metric-label">Circuit Breaker</span>
           </Tooltip>
           <HugeiconsIcon
