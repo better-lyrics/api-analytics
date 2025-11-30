@@ -4,7 +4,7 @@ import {
   Analytics02Icon,
   DashboardSpeed01Icon,
   Database01Icon,
-  Clock01Icon,
+  Time01Icon,
 } from "@hugeicons/core-free-icons";
 import { MetricCard } from "@/components/ui/MetricCard";
 import type { AnalyticsSnapshot } from "@/types/analytics";
@@ -100,7 +100,7 @@ export function MetricsGrid({ snapshot, ready }: MetricsGridProps) {
         subtext={
           <>Since {new Date(snapshot.server.start_time).toLocaleDateString()}</>
         }
-        icon={<HugeiconsIcon icon={Clock01Icon} size={18} />}
+        icon={<HugeiconsIcon icon={Time01Icon} size={18} />}
         delay={200}
         tooltip="Time elapsed since the API server was last started"
       />
