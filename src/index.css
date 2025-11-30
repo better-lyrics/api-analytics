@@ -1,4 +1,5 @@
-@import url("https://api.fontshare.com/v2/css?f[]=satoshi@1&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Space+Grotesk:wght@400;500;600;700&display=swap");
+@import url("https://api.fontshare.com/v2/css?f[]=satoshi@400,500,700,900&display=swap");
 
 @tailwind base;
 @tailwind components;
@@ -6,65 +7,29 @@
 
 @layer base {
   :root {
-    --background: 240 10% 3.9%;
-    --foreground: 0 0% 98%;
-    --card: 240 10% 3.9%;
-    --card-foreground: 0 0% 98%;
-    --popover: 240 10% 3.9%;
-    --popover-foreground: 0 0% 98%;
-    --primary: 0 0% 98%;
-    --primary-foreground: 240 5.9% 10%;
-    --secondary: 240 3.7% 15.9%;
-    --secondary-foreground: 0 0% 98%;
-    --muted: 240 3.7% 15.9%;
-    --muted-foreground: 240 5% 64.9%;
-    --accent: 240 3.7% 15.9%;
-    --accent-foreground: 0 0% 98%;
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 0 0% 98%;
-    --border: 240 3.7% 15.9%;
-    --input: 240 3.7% 15.9%;
-    --ring: 240 4.9% 83.9%;
-    --chart-1: 220 70% 50%;
-    --chart-5: 160 60% 45%;
-    --chart-3: 30 80% 55%;
-    --chart-4: 280 65% 60%;
-    --chart-2: 340 75% 55%;
-  }
-}
+    --background: 0 0% 2%;
+    --foreground: 0 0% 92%;
+    --card: 0 0% 4%;
+    --card-foreground: 0 0% 92%;
+    --popover: 0 0% 4%;
+    --popover-foreground: 0 0% 92%;
+    --primary: 0 80% 50%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 0 0% 8%;
+    --secondary-foreground: 0 0% 92%;
+    --muted: 0 0% 12%;
+    --muted-foreground: 0 0% 45%;
+    --accent: 0 80% 50%;
+    --accent-foreground: 0 0% 100%;
+    --destructive: 0 80% 50%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 0 0% 12%;
+    --input: 0 0% 12%;
+    --ring: 0 80% 50%;
+    --radius: 0;
 
-@layer base {
-  :root {
-    --background: 224 71% 4%;
-    --foreground: 213 31% 91%;
-
-    --muted: 223 47% 11%;
-    --muted-foreground: 215.4 16.3% 56.9%;
-
-    --accent: 216 34% 17%;
-    --accent-foreground: 210 40% 98%;
-
-    --popover: 224 71% 4%;
-    --popover-foreground: 215 20.2% 65.1%;
-
-    --border: 216 34% 17%;
-    --input: 216 34% 17%;
-
-    --card: 224 71% 4%;
-    --card-foreground: 213 31% 91%;
-
-    --primary: 210 40% 98%;
-    --primary-foreground: 222.2 47.4% 1.2%;
-
-    --secondary: 222.2 47.4% 11.2%;
-    --secondary-foreground: 210 40% 98%;
-
-    --destructive: 0 63% 31%;
-    --destructive-foreground: 210 40% 98%;
-
-    --ring: 216 34% 17%;
-
-    --radius: 0.5rem;
+    --chart-1: 0 80% 50%;
+    --chart-2: 0 0% 40%;
   }
 }
 
@@ -72,9 +37,227 @@
   * {
     @apply border-border;
   }
+
+  html {
+    scroll-behavior: smooth;
+    background: hsl(var(--background));
+  }
+
   body {
-    font-family: "Satoshi", sans-serif;
-    @apply bg-background text-foreground;
-    font-feature-settings: "rlig" 1, "calt" 1;
+    font-family: "Space Grotesk", system-ui, sans-serif;
+    @apply bg-background text-foreground antialiased;
+    min-height: 100vh;
+    background: radial-gradient(
+        ellipse 80% 50% at 50% -20%,
+        hsl(0, 80%, 50%, 0.1),
+        transparent
+      ),
+      radial-gradient(
+        ellipse 60% 40% at 100% 100%,
+        hsl(0, 80%, 50%, 0.05),
+        transparent
+      ),
+      linear-gradient(to bottom, hsl(0, 0%, 2%), hsl(0, 0%, 3%));
+    background-attachment: fixed;
+  }
+
+  body::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    background-image: linear-gradient(
+        hsl(0, 0%, 100%, 0.015) 1px,
+        transparent 1px
+      ),
+      linear-gradient(90deg, hsl(0, 0%, 100%, 0.015) 1px, transparent 1px);
+    background-size: 60px 60px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  ::selection {
+    background: hsl(0, 80%, 50%, 0.4);
+  }
+}
+
+@layer components {
+  .font-mono {
+    font-family: "IBM Plex Mono", monospace;
+  }
+
+  .font-satoshi {
+    font-family: "Satoshi", system-ui, sans-serif;
+  }
+
+  .card {
+    background: hsl(0, 0%, 3%);
+    border: 1px solid hsl(0, 80%, 50%, 0.15);
+    position: relative;
+  }
+
+  .card::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: linear-gradient(
+      90deg,
+      transparent,
+      hsl(0, 80%, 50%, 0.4) 20%,
+      hsl(0, 80%, 50%, 0.4) 80%,
+      transparent
+    );
+  }
+
+  .card-hover {
+    @apply transition-all duration-200;
+  }
+
+  .card-hover:hover {
+    border-color: hsl(0, 80%, 50%, 0.4);
+    box-shadow: 0 0 20px hsl(0, 80%, 50%, 0.1),
+      inset 0 0 30px hsl(0, 80%, 50%, 0.03);
+  }
+
+  .metric-value {
+    @apply text-2xl font-bold tracking-tight;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .metric-label {
+    @apply text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground;
+  }
+
+  .status-badge {
+    @apply inline-flex items-center gap-1.5 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider;
+    background: hsl(0, 0%, 10%);
+    border: 1px solid hsl(0, 0%, 20%);
+    color: hsl(0, 0%, 70%);
+  }
+
+  .status-badge-success {
+    background: hsl(0, 0%, 10%);
+    border-color: hsl(0, 0%, 20%);
+    color: hsl(0, 0%, 90%);
+  }
+
+  .status-badge-error {
+    background: hsl(0, 0%, 10%);
+    border-color: hsl(0, 80%, 50%, 0.4);
+    color: hsl(0, 0%, 90%);
+  }
+
+  .progress-bar {
+    @apply h-0.5 overflow-hidden;
+    background: hsl(0, 0%, 8%);
+  }
+
+  .progress-bar-fill {
+    @apply h-full;
+    background: hsl(0, 80%, 50%);
+    box-shadow: 0 0 10px hsl(0, 80%, 50%, 0.5);
+  }
+
+  .glow-line {
+    position: relative;
+  }
+
+  .glow-line::after {
+    content: "";
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: linear-gradient(
+      90deg,
+      transparent,
+      hsl(0, 80%, 50%, 0.5) 30%,
+      hsl(0, 80%, 50%, 0.5) 70%,
+      transparent
+    );
+    box-shadow: 0 0 10px hsl(0, 80%, 50%, 0.3);
+  }
+
+  .section-title {
+    @apply text-xs font-bold uppercase tracking-[0.15em];
+    color: hsl(0, 0%, 50%);
+  }
+
+  .tooltip-trigger {
+    position: relative;
+    cursor: help;
+  }
+
+  .tooltip-content {
+    position: absolute;
+    bottom: calc(100% + 8px);
+    left: 50%;
+    transform: translateX(-50%) scale(0.96);
+    padding: 8px 12px;
+    background: hsl(0, 0%, 8%);
+    border: 1px solid hsl(0, 0%, 20%);
+    color: hsl(0, 0%, 80%);
+    font-size: 11px;
+    font-family: "Space Grotesk", system-ui, sans-serif;
+    font-weight: 400;
+    letter-spacing: 0;
+    text-transform: none;
+    white-space: normal;
+    width: max-content;
+    max-width: min(320px, 90vw);
+    text-align: center;
+    line-height: 1.4;
+    z-index: 50;
+    pointer-events: none;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.15s ease, transform 0.15s ease, visibility 0.15s;
+  }
+
+  .tooltip-trigger:hover .tooltip-content {
+    opacity: 1;
+    visibility: visible;
+    transform: translateX(-50%) scale(1);
+  }
+}
+
+@layer utilities {
+  .fade-in {
+    animation: fadeIn 0.4s ease-out forwards;
+    opacity: 0;
+  }
+
+  @keyframes fadeIn {
+    to {
+      opacity: 1;
+    }
+  }
+
+  .delay-100 {
+    animation-delay: 40ms;
+  }
+  .delay-200 {
+    animation-delay: 80ms;
+  }
+  .delay-300 {
+    animation-delay: 120ms;
+  }
+  .delay-400 {
+    animation-delay: 160ms;
+  }
+  .delay-500 {
+    animation-delay: 200ms;
+  }
+  .delay-600 {
+    animation-delay: 240ms;
+  }
+  .delay-700 {
+    animation-delay: 280ms;
+  }
+  .delay-800 {
+    animation-delay: 320ms;
   }
 }

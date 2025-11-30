@@ -1,217 +1,96 @@
-import { useQuery } from "@tanstack/react-query";
-import { createClient } from "@supabase/supabase-js";
-import { XAxis, CartesianGrid, Area, AreaChart } from "recharts";
+"use client";
 
-import {
-  type ChartConfig,
-  ChartContainer,
-  ChartTooltip,
-  ChartTooltipContent,
-} from "./chart";
-
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "./card";
-
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
-
-if (!supabaseUrl || !supabaseAnonKey) {
-  throw new Error("Missing VITE_SUPABASE_URL or VITE_SUPABASE_ANON_KEY");
-}
-
-const supabase = createClient(supabaseUrl, supabaseAnonKey);
-
-interface CountData {
-  date: string;
-  lyrics_count: number;
-  track_count: number;
-  number_of_keys: number;
-  size_in_kb: number;
-}
-
-async function fetchCounts(): Promise<CountData[]> {
-  const { data, error } = await supabase
-    .from("counts")
-    .select("*")
-    .order("date", { ascending: true });
-
-  if (error) {
-    throw new Error(`Error fetching data: ${error.message}`);
-  }
-
-  return data;
-}
-
-const chartConfig = {
-  lyrics_count: {
-    label: "Lyrics Count",
-    color: "hsl(var(--chart-1))",
-  },
-  track_count: {
-    label: "Track Count",
-    color: "hsl(var(--chart-2))",
-  },
-  number_of_keys: {
-    label: "Number of Keys",
-    color: "hsl(var(--chart-3))",
-  },
-  size_in_kb: {
-    label: "Size in KB",
-    color: "hsl(var(--chart-4))",
-  },
-} satisfies ChartConfig;
-
-const formatDate = (dateString: string) => {
-  const date = new Date(dateString);
-  return date.toLocaleDateString("en-US", {
-    day: "2-digit",
-    month: "short",
-    year: "numeric",
-  });
-};
+import { useState, useEffect } from "react";
+import { HugeiconsIcon } from "@hugeicons/react";
+import { Alert02Icon } from "@hugeicons/core-free-icons";
+import { ANIMATION_READY_DELAY_MS } from "@/lib/supabase";
+import { useAnalytics } from "@/hooks/useAnalytics";
+import { useHistoricalData } from "@/hooks/useHistoricalData";
+import { useMobile } from "@/hooks/useMobile";
+import { Header } from "@/components/dashboard/Header";
+import { MetricsGrid } from "@/components/dashboard/MetricsGrid";
+import { TrafficChart } from "@/components/dashboard/TrafficChart";
+import { AgentsChart } from "@/components/dashboard/AgentsChart";
+import { RequestsBreakdown } from "@/components/dashboard/RequestsBreakdown";
+import { StatusGrid } from "@/components/dashboard/StatusGrid";
+import { Footer } from "@/components/dashboard/Footer";
+import type { HistoricalDataPoint } from "@/types/analytics";
 
 export default function App() {
-  const { data, isLoading, isError, error } = useQuery<CountData[], Error>({
-    queryKey: ["counts"],
-    queryFn: fetchCounts,
-  });
+  const [ready, setReady] = useState(false);
+  const [hoveredPoint, setHoveredPoint] = useState<HistoricalDataPoint | null>(
+    null
+  );
+  const isMobile = useMobile();
+
+  const { data: latestSnapshot, isLoading, isError } = useAnalytics();
+  const { data: historicalSnapshots = [] } = useHistoricalData();
+
+  useEffect(() => {
+    if (latestSnapshot && !ready) {
+      const timer = setTimeout(() => setReady(true), ANIMATION_READY_DELAY_MS);
+      return () => clearTimeout(timer);
+    }
+  }, [latestSnapshot, ready]);
 
   if (isLoading) {
-    return <div className="container mx-auto p-4">Loading...</div>;
+    return (
+      <div className="min-h-screen grid place-items-center">
+        <div className="text-center">
+          <div className="w-6 h-6 border border-primary border-t-transparent rounded-full animate-spin mx-auto mb-3" />
+          <p className="text-muted-foreground font-mono text-xs tracking-wider">
+            LOADING
+          </p>
+        </div>
+      </div>
+    );
   }
 
-  if (isError) {
-    return <div className="container mx-auto p-4">Error: {error.message}</div>;
+  if (isError || !latestSnapshot) {
+    return (
+      <div className="min-h-screen grid place-items-center">
+        <div className="text-center">
+          <HugeiconsIcon
+            icon={Alert02Icon}
+            className="w-6 h-6 text-primary mx-auto mb-3"
+          />
+          <p className="text-primary font-mono text-xs tracking-wider">ERROR</p>
+        </div>
+      </div>
+    );
   }
+
+  const displayedSnapshot = hoveredPoint?.snapshot ?? latestSnapshot;
+  const isSystemHealthy = displayedSnapshot.circuit_breaker.state === "CLOSED";
 
   return (
-    <>
-      <nav className="fixed p-4 w-full">
-        <h1 className="text-2xl font-bold">Better Lyrics Analytics</h1>
-      </nav>
-      <div className="h-screen w-full grid place-items-center">
-        <Card className="min-w-[75%]">
-          <CardHeader>
-            <CardTitle>Lyrics and Track Count Trends</CardTitle>
-            <CardDescription>
-              Showing lyrics and track counts over time
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <ChartContainer config={chartConfig}>
-              <AreaChart
-                accessibilityLayer
-                data={data}
-                margin={{
-                  left: 0,
-                  right: 0,
-                }}
-              >
-                <CartesianGrid vertical={false} />
-                <XAxis
-                  dataKey="date"
-                  tickLine={false}
-                  axisLine={false}
-                  tickMargin={8}
-                  tickFormatter={formatDate}
-                />
-                <ChartTooltip
-                  labelFormatter={formatDate}
-                  cursor={false}
-                  content={<ChartTooltipContent />}
-                />
-                <defs>
-                  <linearGradient id="fillLyrics" x1="0" y1="0" x2="0" y2="1">
-                    <stop
-                      offset="5%"
-                      stopColor="var(--color-lyrics_count)"
-                      stopOpacity={0.8}
-                    />
-                    <stop
-                      offset="95%"
-                      stopColor="var(--color-lyrics_count)"
-                      stopOpacity={0.1}
-                    />
-                  </linearGradient>
-                  <linearGradient id="fillTracks" x1="0" y1="0" x2="0" y2="1">
-                    <stop
-                      offset="5%"
-                      stopColor="var(--color-track_count)"
-                      stopOpacity={0.8}
-                    />
-                    <stop
-                      offset="95%"
-                      stopColor="var(--color-track_count)"
-                      stopOpacity={0.1}
-                    />
-                  </linearGradient>
-                  <linearGradient id="fillKeys" x1="0" y1="0" x2="0" y2="1">
-                    <stop
-                      offset="5%"
-                      stopColor="var(--color-number_of_keys)"
-                      stopOpacity={0.8}
-                    />
-                    <stop
-                      offset="95%"
-                      stopColor="var(--color-number_of_keys)"
-                      stopOpacity={0.1}
-                    />
-                  </linearGradient>
-                  <linearGradient id="fillSize" x1="0" y1="0" x2="0" y2="1">
-                    <stop
-                      offset="5%"
-                      stopColor="var(--color-size_in_kb)"
-                      stopOpacity={0.8}
-                    />
-                    <stop
-                      offset="95%"
-                      stopColor="var(--color-size_in_kb)"
-                      stopOpacity={0.1}
-                    />
-                  </linearGradient>
-                </defs>
-                <Area
-                  dataKey="lyrics_count"
-                  type="natural"
-                  fill="url(#fillLyrics)"
-                  fillOpacity={0.4}
-                  stroke="var(--color-lyrics_count)"
-                  stackId="a"
-                />
-                <Area
-                  dataKey="track_count"
-                  type="natural"
-                  fill="url(#fillTracks)"
-                  fillOpacity={0.4}
-                  stroke="var(--color-track_count)"
-                  stackId="a"
-                />
-                <Area
-                  dataKey="number_of_keys"
-                  type="natural"
-                  fill="url(#fillKeys)"
-                  fillOpacity={0.4}
-                  stroke="var(--color-number_of_keys)"
-                  stackId="a"
-                />
-                <Area
-                  dataKey="size_in_kb"
-                  type="natural"
-                  fill="url(#fillSize)"
-                  fillOpacity={0.4}
-                  stroke="var(--color-size_in_kb)"
-                  stackId="a"
-                />
-              </AreaChart>
-            </ChartContainer>
-          </CardContent>
-        </Card>
+    <div className="min-h-screen">
+      <div className="max-w-6xl mx-auto p-6 lg:p-8">
+        <Header isSystemHealthy={isSystemHealthy} />
+
+        <MetricsGrid snapshot={displayedSnapshot} ready={ready} />
+
+        <TrafficChart
+          snapshot={displayedSnapshot}
+          historicalSnapshots={historicalSnapshots}
+          hoveredPoint={hoveredPoint}
+          onHover={setHoveredPoint}
+          isMobile={isMobile}
+          ready={ready}
+        />
+
+        <section className="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-6">
+          <AgentsChart snapshot={displayedSnapshot} />
+          <RequestsBreakdown snapshot={displayedSnapshot} ready={ready} />
+        </section>
+
+        <StatusGrid snapshot={displayedSnapshot} ready={ready} />
+
+        <Footer
+          hoveredPoint={hoveredPoint}
+          latestTimestamp={latestSnapshot.timestamp}
+        />
       </div>
-    </>
+    </div>
   );
 }
