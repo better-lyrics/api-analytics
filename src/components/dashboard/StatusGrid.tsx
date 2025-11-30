@@ -1,6 +1,9 @@
 import NumberFlow from "@number-flow/react";
 import { HugeiconsIcon } from "@hugeicons/react";
 import {
+  Bone01Icon,
+  Bone02Icon,
+  BrokenBoneIcon,
   ElectricHome02Icon,
   DashboardSpeed01Icon,
   Database01Icon,
@@ -14,7 +17,21 @@ interface StatusGridProps {
   ready: boolean;
 }
 
+function getCircuitBreakerIcon(state: "CLOSED" | "OPEN" | "HALF_OPEN") {
+  switch (state) {
+    case "CLOSED":
+      return Bone01Icon;
+    case "HALF_OPEN":
+      return Bone02Icon;
+    case "OPEN":
+      return BrokenBoneIcon;
+  }
+}
+
 export function StatusGrid({ snapshot, ready }: StatusGridProps) {
+  const circuitBreakerState = snapshot.circuit_breaker.state;
+  const circuitBreakerClosed = circuitBreakerState === "CLOSED";
+
   return (
     <section className="grid grid-cols-2 lg:grid-cols-4 gap-4">
       {/* Circuit Breaker */}
@@ -29,9 +46,18 @@ export function StatusGrid({ snapshot, ready }: StatusGridProps) {
             size={18}
           />
         </div>
-        <p className="text-lg font-medium">
+        <p className="text-lg font-medium flex items-center gap-2">
+          <HugeiconsIcon
+            icon={getCircuitBreakerIcon(circuitBreakerState)}
+            className="text-primary"
+            size={16}
+          />
           <span className="font-mono text-primary">
-            {snapshot.circuit_breaker.state}
+            {circuitBreakerState === "CLOSED"
+              ? "Healthy"
+              : circuitBreakerState === "HALF_OPEN"
+                ? "Recovering"
+                : "Tripped"}
           </span>
         </p>
         <p className="text-xs text-muted-foreground mt-1">

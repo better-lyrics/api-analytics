@@ -10,6 +10,7 @@ React + TypeScript analytics dashboard for the Better Lyrics project. Visualizes
 
 ```bash
 bun dev        # Start Vite dev server
+bun typecheck  # Run TypeScript type checking
 bun run build  # TypeScript check + Vite production build
 bun preview    # Preview production build
 bun lint       # ESLint with --max-warnings 0 (strict)

@@ -39,6 +39,8 @@ export function TrafficChart({
       historicalSnapshots.map((point) => ({
         date: point.date,
         requests: point.snapshot.requests.total,
+        cacheHits: point.snapshot.cache.hits,
+        cacheMisses: point.snapshot.cache.misses,
         errors: point.snapshot.responses["5xx"],
         _original: point,
       })),
@@ -132,6 +134,30 @@ export function TrafficChart({
                     stopOpacity={0}
                   />
                 </linearGradient>
+                <linearGradient id="gradientCacheHits" x1="0" y1="0" x2="0" y2="1">
+                  <stop
+                    offset="0%"
+                    stopColor="hsl(0, 60%, 50%)"
+                    stopOpacity={0.4}
+                  />
+                  <stop
+                    offset="100%"
+                    stopColor="hsl(0, 60%, 50%)"
+                    stopOpacity={0}
+                  />
+                </linearGradient>
+                <linearGradient id="gradientCacheMisses" x1="0" y1="0" x2="0" y2="1">
+                  <stop
+                    offset="0%"
+                    stopColor="hsl(0, 30%, 40%)"
+                    stopOpacity={0.3}
+                  />
+                  <stop
+                    offset="100%"
+                    stopColor="hsl(0, 30%, 40%)"
+                    stopOpacity={0}
+                  />
+                </linearGradient>
                 <linearGradient id="gradientErr" x1="0" y1="0" x2="0" y2="1">
                   <stop
                     offset="0%"
@@ -187,7 +213,23 @@ export function TrafficChart({
                 stroke="hsl(0, 75%, 55%)"
                 strokeWidth={2}
                 fill="url(#gradientReq)"
-                name="Requests"
+                name="Total Requests"
+              />
+              <Area
+                type="monotone"
+                dataKey="cacheHits"
+                stroke="hsl(0, 60%, 50%)"
+                strokeWidth={1.5}
+                fill="url(#gradientCacheHits)"
+                name="Cache Hits"
+              />
+              <Area
+                type="monotone"
+                dataKey="cacheMisses"
+                stroke="hsl(0, 30%, 40%)"
+                strokeWidth={1}
+                fill="url(#gradientCacheMisses)"
+                name="Cache Misses"
               />
               <Area
                 type="monotone"

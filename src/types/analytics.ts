@@ -124,6 +124,8 @@ export interface HistoricalDataPoint {
 export interface TrafficChartPoint {
   date: string;
   requests: number;
+  cacheHits: number;
+  cacheMisses: number;
   errors: number;
   _original: HistoricalDataPoint;
 }
