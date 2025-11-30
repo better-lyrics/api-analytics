@@ -30,7 +30,6 @@ function getCircuitBreakerIcon(state: "CLOSED" | "OPEN" | "HALF_OPEN") {
 
 export function StatusGrid({ snapshot, ready }: StatusGridProps) {
   const circuitBreakerState = snapshot.circuit_breaker.state;
-  const circuitBreakerClosed = circuitBreakerState === "CLOSED";
 
   return (
     <section className="grid grid-cols-2 lg:grid-cols-4 gap-4">
