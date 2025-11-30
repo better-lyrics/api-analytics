@@ -1,4 +1,8 @@
 import type { AnalyticsRow, AnalyticsSnapshot } from "@/types/analytics";
+import {
+  getCanonicalName,
+  getFormerNames,
+} from "@/config/account-migrations";
 
 // -- Parsing Functions ---------------------------------------------------------
 
@@ -26,6 +30,33 @@ export function parseDuration(duration: string): number {
 export function parseCooldown(cooldown: string): number {
   const match = cooldown.match(/^([\d.]+)s$/);
   return match ? parseFloat(match[1]) : 0;
+}
+
+// -- Account Migration ---------------------------------------------------------
+
+function transformAccounts(
+  accounts: Record<string, number>
+): AnalyticsSnapshot["ttml_agents"] {
+  const aggregated = new Map<string, number>();
+
+  for (const [name, requests] of Object.entries(accounts)) {
+    const canonicalName = getCanonicalName(name);
+    aggregated.set(
+      canonicalName,
+      (aggregated.get(canonicalName) ?? 0) + requests
+    );
+  }
+
+  return Array.from(aggregated.entries())
+    .map(([name, requests]) => {
+      const formerNames = getFormerNames(name);
+      return {
+        name,
+        requests,
+        ...(formerNames.length > 0 && { formerNames }),
+      };
+    })
+    .sort((a, b) => b.requests - a.requests);
 }
 
 // -- Data Transformation -------------------------------------------------------
@@ -83,8 +114,6 @@ export function transformApiResponse(row: AnalyticsRow): AnalyticsSnapshot {
       uptime_seconds: data.server.uptime_seconds,
       start_time: data.server.start_time,
     },
-    ttml_agents: Object.entries(data.accounts)
-      .map(([name, requests]) => ({ name, requests }))
-      .sort((a, b) => b.requests - a.requests),
+    ttml_agents: transformAccounts(data.accounts),
   };
 }

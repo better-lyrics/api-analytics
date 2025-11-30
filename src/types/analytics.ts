@@ -113,6 +113,7 @@ export interface AnalyticsSnapshot {
   ttml_agents: Array<{
     name: string;
     requests: number;
+    formerNames?: string[];
   }>;
 }
 
