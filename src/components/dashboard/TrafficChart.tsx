@@ -11,11 +11,55 @@ import {
 import { HugeiconsIcon } from "@hugeicons/react";
 import { Analytics02Icon } from "@hugeicons/core-free-icons";
 import { Tooltip } from "@/components/ui/Tooltip";
+import type { TooltipProps } from "recharts";
 import type {
   AnalyticsSnapshot,
   HistoricalDataPoint,
   TrafficChartPoint,
 } from "@/types/analytics";
+
+// -- Custom Tooltip -----------------------------------------------------------
+
+const METRIC_COLORS: Record<string, string> = {
+  "Total Requests": "hsl(0, 75%, 55%)",
+  "Cache Hits": "hsl(0, 60%, 50%)",
+  "Cache Misses": "hsl(0, 30%, 40%)",
+  Errors: "hsl(0, 50%, 35%)",
+};
+
+function CustomTooltipContent({
+  active,
+  payload,
+  label,
+}: TooltipProps<number, string>) {
+  if (!active || !payload?.length) return null;
+
+  const sortedPayload = [...payload].sort(
+    (a, b) => (b.value as number) - (a.value as number)
+  );
+
+  return (
+    <div
+      style={{
+        background: "hsl(0, 0%, 5%)",
+        border: "1px solid hsl(0, 0%, 15%)",
+        padding: "8px 12px",
+        fontSize: 12,
+        fontFamily: "IBM Plex Mono",
+      }}
+    >
+      <p style={{ color: "hsl(0, 0%, 60%)", marginBottom: 4 }}>{label}</p>
+      {sortedPayload.map((entry) => (
+        <p
+          key={entry.name}
+          style={{ color: METRIC_COLORS[entry.name || ""] || "#fff" }}
+        >
+          {entry.name}: {entry.value?.toLocaleString()}
+        </p>
+      ))}
+    </div>
+  );
+}
 
 interface TrafficChartProps {
   snapshot: AnalyticsSnapshot;
@@ -197,16 +241,7 @@ export function TrafficChart({
                 width={isMobile ? 0 : 45}
                 hide={isMobile}
               />
-              <RechartsTooltip
-                contentStyle={{
-                  background: "hsl(0, 0%, 5%)",
-                  border: "1px solid hsl(0, 0%, 15%)",
-                  borderRadius: 0,
-                  fontSize: 12,
-                  fontFamily: "IBM Plex Mono",
-                }}
-                labelStyle={{ color: "hsl(0, 0%, 60%)" }}
-              />
+              <RechartsTooltip content={<CustomTooltipContent />} />
               <Area
                 type="monotone"
                 dataKey="requests"
