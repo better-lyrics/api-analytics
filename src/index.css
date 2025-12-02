@@ -222,6 +222,10 @@
     visibility: visible;
     transform: translateX(-50%) scale(1);
   }
+
+  .recharts-surface {
+    overflow: visible;
+  }
 }
 
 @layer utilities {

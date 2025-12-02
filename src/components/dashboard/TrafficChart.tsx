@@ -91,6 +91,22 @@ export function TrafficChart({
     [historicalSnapshots]
   );
 
+  const visibleTicks = useMemo(() => {
+    const len = trafficChartPoints.length;
+    if (len <= 1) return trafficChartPoints.map((p) => p.date);
+    if (len <= 7) return trafficChartPoints.map((p) => p.date);
+
+    const maxTicks = len <= 14 ? 7 : len <= 30 ? 6 : 5;
+    const step = (len - 1) / (maxTicks - 1);
+    const indices = new Set<number>([0, len - 1]);
+
+    for (let i = 1; i < maxTicks - 1; i++) {
+      indices.add(Math.round(i * step));
+    }
+
+    return [...indices].sort((a, b) => a - b).map((i) => trafficChartPoints[i].date);
+  }, [trafficChartPoints]);
+
   const hasErrors = snapshot.responses["5xx"] > 0;
 
   return (
@@ -227,7 +243,7 @@ export function TrafficChart({
                 axisLine={false}
                 hide={isMobile}
                 tickMargin={8}
-                interval="preserveStartEnd"
+                ticks={visibleTicks}
               />
               <YAxis
                 stroke="hsl(0, 0%, 15%)"
