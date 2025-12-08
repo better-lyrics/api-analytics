@@ -7,24 +7,25 @@ import {
 // -- Parsing Functions ---------------------------------------------------------
 
 export function parseDuration(duration: string): number {
-  const match = duration.match(/^([\d.]+)(µs|ms|s|m|h)$/);
-  if (!match) return 0;
-  const value = parseFloat(match[1]);
-  const unit = match[2];
-  switch (unit) {
-    case "µs":
-      return value / 1000;
-    case "ms":
-      return value;
-    case "s":
-      return value * 1000;
-    case "m":
-      return value * 60 * 1000;
-    case "h":
-      return value * 60 * 60 * 1000;
-    default:
-      return 0;
+  const unitMultipliers: Record<string, number> = {
+    µs: 1 / 1000,
+    ms: 1,
+    s: 1000,
+    m: 60 * 1000,
+    h: 60 * 60 * 1000,
+  };
+
+  let totalMs = 0;
+  const regex = /([\d.]+)(µs|ms|s|m|h)/g;
+  let match;
+
+  while ((match = regex.exec(duration)) !== null) {
+    const value = parseFloat(match[1]);
+    const unit = match[2];
+    totalMs += value * (unitMultipliers[unit] ?? 0);
   }
+
+  return totalMs;
 }
 
 export function parseCooldown(cooldown: string): number {
