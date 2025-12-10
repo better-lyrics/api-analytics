@@ -22,6 +22,7 @@ async function fetchHistoricalData(): Promise<HistoricalDataPoint[]> {
         hour: "numeric",
         minute: "2-digit",
       }),
+      timestamp: date.getTime(),
       snapshot: transformApiResponse(row),
     };
   });

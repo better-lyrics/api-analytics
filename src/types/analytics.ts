@@ -119,6 +119,7 @@ export interface AnalyticsSnapshot {
 
 export interface HistoricalDataPoint {
   date: string;
+  timestamp: number;
   snapshot: AnalyticsSnapshot;
 }
 
@@ -129,6 +130,45 @@ export interface TrafficChartPoint {
   cacheMisses: number;
   errors: number;
   _original: HistoricalDataPoint;
+}
+
+export interface DeltaSnapshot {
+  requests: {
+    total: number;
+    lyrics: number;
+    cache: number;
+    health: number;
+    stats: number;
+    other: number;
+  };
+  responses: {
+    "2xx": number;
+    "4xx": number;
+    "5xx": number;
+  };
+  cache: {
+    hits: number;
+    misses: number;
+    negative_hits: number;
+    stale_hits: number;
+  };
+  storage: {
+    keys: number;
+    storage_mb: number;
+  };
+  rate_limiting: {
+    normal_tier: number;
+    cached_tier: number;
+    exceeded: number;
+  };
+  circuit_breaker: {
+    failures: number;
+  };
+  ttml_agents: Array<{
+    name: string;
+    requests: number;
+    formerNames?: string[];
+  }>;
 }
 
 // -- Component Props -----------------------------------------------------------
@@ -146,4 +186,5 @@ export interface MetricCardProps {
   icon: ReactNode;
   delay?: number;
   tooltip?: string;
+  showDelta?: boolean;
 }

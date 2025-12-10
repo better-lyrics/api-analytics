@@ -1,5 +1,6 @@
 import NumberFlow from "@number-flow/react";
 import { Tooltip } from "@/components/ui/Tooltip";
+import { DeltaIndicator } from "@/components/ui/DeltaIndicator";
 import type { MetricCardProps } from "@/types/analytics";
 
 export function MetricCard({
@@ -10,19 +11,26 @@ export function MetricCard({
   icon,
   delay = 0,
   tooltip,
+  showDelta = false,
 }: MetricCardProps) {
   return (
     <div
       className="card card-hover p-5 fade-in"
       style={{ animationDelay: `${delay}ms` }}
     >
-      <div className="flex items-start justify-between mb-4">
+      <div className="flex items-start justify-between mb-3">
         {tooltip ? (
           <Tooltip content={tooltip}>
-            <span className="metric-label">{label}</span>
+            <span className="metric-label flex items-center gap-1.5">
+              {label}
+              <DeltaIndicator show={showDelta} />
+            </span>
           </Tooltip>
         ) : (
-          <p className="metric-label">{label}</p>
+          <p className="metric-label flex items-center gap-1.5">
+            {label}
+            <DeltaIndicator show={showDelta} />
+          </p>
         )}
         <div className="text-primary">{icon}</div>
       </div>

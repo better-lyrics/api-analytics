@@ -127,7 +127,7 @@
   }
 
   .metric-label {
-    @apply text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground;
+    @apply text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground flex mt-0.5;
   }
 
   .status-badge {

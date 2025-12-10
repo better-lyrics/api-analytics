@@ -21,7 +21,9 @@ import type {
 import { HugeiconsIcon } from "@hugeicons/react";
 import { Vynil03Icon } from "@hugeicons/core-free-icons";
 import { Tooltip } from "@/components/ui/Tooltip";
-import type { AnalyticsSnapshot } from "@/types/analytics";
+import { DeltaIndicator } from "@/components/ui/DeltaIndicator";
+import type { AnalyticsSnapshot, DeltaSnapshot } from "@/types/analytics";
+import type { ViewMode } from "@/stores/chartPreferences";
 
 type AgentTooltipProps = TooltipProps<ValueType, NameType>;
 
@@ -141,24 +143,46 @@ function PieStats({
 
 interface AgentsChartProps {
   snapshot: AnalyticsSnapshot;
+  deltaSum: DeltaSnapshot;
+  viewMode: ViewMode;
 }
 
-export function AgentsChart({ snapshot }: AgentsChartProps) {
+export function AgentsChart({
+  snapshot,
+  deltaSum,
+  viewMode,
+}: AgentsChartProps) {
   const chartType = useChartPreferences((s) => s.agentsChartType);
   const setChartType = useChartPreferences((s) => s.setAgentsChartType);
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
+  const isDelta = viewMode === "delta";
+  const agents = isDelta ? deltaSum.ttml_agents : snapshot.ttml_agents;
+
   return (
     <div
       className="lg:col-span-2 card p-5 fade-in"
       style={{ animationDelay: "300ms" }}
     >
-      <div className="flex items-center gap-3 mb-5">
-        <HugeiconsIcon icon={Vynil03Icon} size={16} className="text-primary" />
-        <Tooltip content="Breakdown of requests by TTML client/user agent">
-          <h3 className="text-sm font-bold uppercase tracking-wider">
-            TTML Agents
-          </h3>
-        </Tooltip>
+      <div className="flex items-center gap-3 mb-5 justify-between">
+        <div className="flex gap-3">
+          <HugeiconsIcon
+            icon={Vynil03Icon}
+            size={16}
+            className="text-primary"
+          />
+          <Tooltip
+            content={
+              isDelta
+                ? "Change in requests by TTML client during selected range"
+                : "Breakdown of requests by TTML client/user agent"
+            }
+          >
+            <h3 className="text-sm font-bold uppercase tracking-wider flex items-center gap-1.5">
+              TTML Agents
+              <DeltaIndicator show={isDelta} />
+            </h3>
+          </Tooltip>
+        </div>
         <div className="flex gap-1 ml-2">
           {CHART_TYPES.map((type) => (
             <button
@@ -179,7 +203,7 @@ export function AgentsChart({ snapshot }: AgentsChartProps) {
         {chartType === "bar" && (
           <ResponsiveContainer width="100%" height="100%">
             <BarChart
-              data={snapshot.ttml_agents}
+              data={agents}
               layout="vertical"
               margin={{ left: 10, right: 20 }}
             >
@@ -212,7 +236,7 @@ export function AgentsChart({ snapshot }: AgentsChartProps) {
                 cursor={{ fill: "hsl(0, 0%, 10%)" }}
               />
               <Bar dataKey="requests" radius={[0, 2, 2, 0]}>
-                {snapshot.ttml_agents.map((_, index) => {
+                {agents.map((_, index) => {
                   const lightness = 55 - index * 8;
                   return (
                     <Cell
@@ -231,7 +255,7 @@ export function AgentsChart({ snapshot }: AgentsChartProps) {
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
                   <Pie
-                    data={snapshot.ttml_agents}
+                    data={agents}
                     dataKey="requests"
                     nameKey="name"
                     cx="50%"
@@ -242,7 +266,7 @@ export function AgentsChart({ snapshot }: AgentsChartProps) {
                     animationDuration={400}
                     onMouseLeave={() => setHoveredIndex(null)}
                   >
-                    {snapshot.ttml_agents.map((_, index) => {
+                    {agents.map((_, index) => {
                       const lightness = 55 - index * 8;
                       return (
                         <Cell
@@ -256,10 +280,7 @@ export function AgentsChart({ snapshot }: AgentsChartProps) {
                 </PieChart>
               </ResponsiveContainer>
             </div>
-            <PieStats
-              agents={snapshot.ttml_agents}
-              activeIndex={hoveredIndex}
-            />
+            <PieStats agents={agents} activeIndex={hoveredIndex} />
           </div>
         )}
       </div>
