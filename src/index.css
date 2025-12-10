@@ -226,6 +226,11 @@
   .recharts-surface {
     overflow: visible;
   }
+
+  .recharts-xAxis text,
+  .recharts-yAxis text {
+    user-select: none;
+  }
 }
 
 @layer utilities {

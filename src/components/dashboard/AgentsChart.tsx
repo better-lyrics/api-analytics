@@ -70,6 +70,14 @@ function PieStats({
   agents: AnalyticsSnapshot["ttml_agents"];
   activeIndex: number | null;
 }) {
+  if (agents.length === 0) {
+    return (
+      <div className="w-1/2 flex items-center justify-center text-xs text-muted-foreground font-mono">
+        No data
+      </div>
+    );
+  }
+
   const total = agents.reduce((sum, a) => sum + a.requests, 0);
   const index = activeIndex ?? 0;
   const agent = agents[index];

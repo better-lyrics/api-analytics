@@ -29,6 +29,10 @@ export default function App() {
     null
   );
   const [hoveredDelta, setHoveredDelta] = useState<DeltaDataPoint | null>(null);
+  const [pinnedPoint, setPinnedPoint] = useState<HistoricalDataPoint | null>(
+    null
+  );
+  const [pinnedDelta, setPinnedDelta] = useState<DeltaDataPoint | null>(null);
   const isMobile = useMobile();
 
   const viewMode = useChartPreferences((s) => s.viewMode);
@@ -64,6 +68,11 @@ export default function App() {
     }
   }, [latestSnapshot, ready]);
 
+  useEffect(() => {
+    setPinnedPoint(null);
+    setPinnedDelta(null);
+  }, [viewMode]);
+
   if (isLoading) {
     return (
       <div className="min-h-screen grid place-items-center">
@@ -92,8 +101,12 @@ export default function App() {
   }
 
   const displayedSnapshot =
-    hoveredPoint?.snapshot ?? hoveredDelta?.snapshot ?? latestSnapshot;
-  const displayedDelta = hoveredDelta?.delta ?? deltaSum;
+    pinnedPoint?.snapshot ??
+    pinnedDelta?.snapshot ??
+    hoveredPoint?.snapshot ??
+    hoveredDelta?.snapshot ??
+    latestSnapshot;
+  const displayedDelta = pinnedDelta?.delta ?? hoveredDelta?.delta ?? deltaSum;
   const isSystemHealthy = displayedSnapshot.circuit_breaker.state === "CLOSED";
 
   return (
@@ -115,8 +128,12 @@ export default function App() {
           deltaSum={displayedDelta}
           hoveredPoint={hoveredPoint}
           hoveredDelta={hoveredDelta}
+          pinnedPoint={pinnedPoint}
+          pinnedDelta={pinnedDelta}
           onHover={setHoveredPoint}
           onDeltaHover={setHoveredDelta}
+          onPin={setPinnedPoint}
+          onDeltaPin={setPinnedDelta}
           isMobile={isMobile}
           ready={ready}
         />
@@ -145,6 +162,8 @@ export default function App() {
         <Footer
           hoveredPoint={hoveredPoint}
           hoveredDelta={hoveredDelta}
+          pinnedPoint={pinnedPoint}
+          pinnedDelta={pinnedDelta}
           latestTimestamp={latestSnapshot.timestamp}
         />
       </div>

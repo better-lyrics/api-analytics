@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useMemo, useEffect, useRef, useCallback } from "react";
 import NumberFlow from "@number-flow/react";
 import {
   AreaChart,
@@ -11,6 +11,7 @@ import {
   YAxis,
   ResponsiveContainer,
   Tooltip as RechartsTooltip,
+  ReferenceLine,
 } from "recharts";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { Analytics02Icon } from "@hugeicons/core-free-icons";
@@ -92,8 +93,12 @@ interface TrafficChartProps {
   deltaSum: DeltaSnapshot;
   hoveredPoint: HistoricalDataPoint | null;
   hoveredDelta: DeltaDataPoint | null;
+  pinnedPoint: HistoricalDataPoint | null;
+  pinnedDelta: DeltaDataPoint | null;
   onHover: (point: HistoricalDataPoint | null) => void;
   onDeltaHover: (point: DeltaDataPoint | null) => void;
+  onPin: (point: HistoricalDataPoint | null) => void;
+  onDeltaPin: (point: DeltaDataPoint | null) => void;
   isMobile: boolean;
   ready: boolean;
 }
@@ -125,11 +130,16 @@ export function TrafficChart({
   deltaSum,
   hoveredPoint,
   hoveredDelta,
+  pinnedPoint,
+  pinnedDelta,
   onHover,
   onDeltaHover,
+  onPin,
+  onDeltaPin,
   isMobile,
   ready,
 }: TrafficChartProps) {
+  const chartRef = useRef<HTMLDivElement>(null);
   const chartType = useChartPreferences((s) => s.trafficChartType);
   const setChartType = useChartPreferences((s) => s.setTrafficChartType);
   const viewMode = useChartPreferences((s) => s.viewMode);
@@ -208,7 +218,54 @@ export function TrafficChart({
     onDeltaHover(null);
   };
 
+  const handleChartClick = (payload: unknown) => {
+    if (viewMode === "total") {
+      const point = payload as TrafficChartPoint | undefined;
+      if (point?._original) {
+        const isSamePoint = pinnedPoint?.date === point._original.date;
+        onPin(isSamePoint ? null : point._original);
+        onDeltaPin(null);
+      }
+    } else {
+      const point = payload as DeltaChartPoint | undefined;
+      if (point?._original) {
+        const isSamePoint = pinnedDelta?.date === point._original.date;
+        onDeltaPin(isSamePoint ? null : point._original);
+        onPin(null);
+      }
+    }
+  };
+
   const hoveredDate = hoveredPoint?.date ?? hoveredDelta?.date;
+  const pinnedDate = pinnedPoint?.date ?? pinnedDelta?.date;
+
+  const clearPin = useCallback(() => {
+    onPin(null);
+    onDeltaPin(null);
+  }, [onPin, onDeltaPin]);
+
+  useEffect(() => {
+    if (!pinnedDate) return;
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        clearPin();
+      }
+    };
+
+    const handleClickOutside = (e: MouseEvent) => {
+      if (chartRef.current && !chartRef.current.contains(e.target as Node)) {
+        clearPin();
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [pinnedDate, clearPin]);
 
   return (
     <section className="mb-6">
@@ -340,7 +397,7 @@ export function TrafficChart({
             </div>
           </div>
         </div>
-        <div className="h-64">
+        <div ref={chartRef} className="h-64">
           {chartType === "area" && (
             <ResponsiveContainer width="100%" height="100%">
               <AreaChart
@@ -355,6 +412,11 @@ export function TrafficChart({
                   }
                 }}
                 onMouseLeave={handleChartLeave}
+                onClick={(state) => {
+                  if (state?.activePayload?.[0]?.payload) {
+                    handleChartClick(state.activePayload[0].payload);
+                  }
+                }}
               >
                 <defs>
                   <linearGradient id="gradientReq" x1="0" y1="0" x2="0" y2="1">
@@ -444,7 +506,10 @@ export function TrafficChart({
                   width={isMobile ? 0 : 45}
                   hide={isMobile}
                 />
-                <RechartsTooltip content={<CustomTooltipContent />} />
+                <RechartsTooltip
+                  content={<CustomTooltipContent />}
+                  cursor={{ stroke: "hsl(0, 0%, 30%)", strokeOpacity: 0.3 }}
+                />
                 <Area
                   type="monotone"
                   dataKey="requests"
@@ -452,6 +517,7 @@ export function TrafficChart({
                   strokeWidth={2}
                   fill="url(#gradientReq)"
                   name="Total Requests"
+                  activeDot={{ stroke: "hsl(0, 50%, 5%)" }}
                 />
                 <Area
                   type="monotone"
@@ -460,6 +526,7 @@ export function TrafficChart({
                   strokeWidth={1.5}
                   fill="url(#gradientCacheHits)"
                   name="Cache Hits"
+                  activeDot={{ stroke: "hsl(0, 50%, 5%)" }}
                 />
                 <Area
                   type="monotone"
@@ -468,6 +535,7 @@ export function TrafficChart({
                   strokeWidth={1}
                   fill="url(#gradientCacheMisses)"
                   name="Cache Misses"
+                  activeDot={{ stroke: "hsl(0, 50%, 5%)" }}
                 />
                 <Area
                   type="monotone"
@@ -476,7 +544,34 @@ export function TrafficChart({
                   strokeWidth={1}
                   fill="url(#gradientErr)"
                   name="Errors"
+                  activeDot={{ stroke: "hsl(0, 50%, 5%)" }}
                 />
+                {pinnedDate && (
+                  <ReferenceLine
+                    x={pinnedDate}
+                    stroke="hsl(0, 75%, 55%)"
+                    strokeDasharray="4 4"
+                    strokeOpacity={0.6}
+                    label={{
+                      position: "top",
+                      content: ({ viewBox }) => {
+                        const { x } = viewBox as { x: number };
+                        return (
+                          <g transform={`translate(${x - 8}, -4)`}>
+                            <svg
+                              width="16"
+                              height="16"
+                              viewBox="0 0 24 24"
+                              fill="hsl(0, 75%, 55%)"
+                            >
+                              <path d="M11 14.5h2v-2.275l1.95 1.15l1-1.75L14 10.5l1.95-1.125l-1-1.75L13 8.775V6.5h-2v2.275l-1.95-1.15l-1 1.75L10 10.5l-1.95 1.125l1 1.75l1.95-1.15Zm1 7.5q-4.025-3.425-6.012-6.363Q4 12.7 4 10.2q0-3.75 2.413-5.975Q8.825 2 12 2t5.587 2.225Q20 6.45 20 10.2q0 2.5-1.987 5.437Q16.025 18.575 12 22Z" />
+                            </svg>
+                          </g>
+                        );
+                      },
+                    }}
+                  />
+                )}
               </AreaChart>
             </ResponsiveContainer>
           )}
@@ -494,6 +589,11 @@ export function TrafficChart({
                   }
                 }}
                 onMouseLeave={handleChartLeave}
+                onClick={(state) => {
+                  if (state?.activePayload?.[0]?.payload) {
+                    handleChartClick(state.activePayload[0].payload);
+                  }
+                }}
               >
                 <XAxis
                   dataKey="date"
@@ -523,7 +623,7 @@ export function TrafficChart({
                 />
                 <RechartsTooltip
                   content={<CustomTooltipContent />}
-                  cursor={{ fill: "hsl(0, 0%, 10%)" }}
+                  cursor={{ fill: "hsl(0, 0%, 10%)", fillOpacity: 0.3 }}
                 />
                 <Bar
                   dataKey="requests"
@@ -549,6 +649,32 @@ export function TrafficChart({
                   name="Errors"
                   radius={[2, 2, 0, 0]}
                 />
+                {pinnedDate && (
+                  <ReferenceLine
+                    x={pinnedDate}
+                    stroke="hsl(0, 75%, 55%)"
+                    strokeDasharray="4 4"
+                    strokeOpacity={0.6}
+                    label={{
+                      position: "top",
+                      content: ({ viewBox }) => {
+                        const { x } = viewBox as { x: number };
+                        return (
+                          <g transform={`translate(${x - 8}, -4)`}>
+                            <svg
+                              width="16"
+                              height="16"
+                              viewBox="0 0 24 24"
+                              fill="hsl(0, 75%, 55%)"
+                            >
+                              <path d="M11 14.5h2v-2.275l1.95 1.15l1-1.75L14 10.5l1.95-1.125l-1-1.75L13 8.775V6.5h-2v2.275l-1.95-1.15l-1 1.75L10 10.5l-1.95 1.125l1 1.75l1.95-1.15Zm1 7.5q-4.025-3.425-6.012-6.363Q4 12.7 4 10.2q0-3.75 2.413-5.975Q8.825 2 12 2t5.587 2.225Q20 6.45 20 10.2q0 2.5-1.987 5.437Q16.025 18.575 12 22Z" />
+                            </svg>
+                          </g>
+                        );
+                      },
+                    }}
+                  />
+                )}
               </BarChart>
             </ResponsiveContainer>
           )}
@@ -565,6 +691,11 @@ export function TrafficChart({
                   }
                 }}
                 onMouseLeave={handleChartLeave}
+                onClick={(state) => {
+                  if (state?.activePayload?.[0]?.payload) {
+                    handleChartClick(state.activePayload[0].payload);
+                  }
+                }}
               >
                 <XAxis
                   dataKey="date"
@@ -599,13 +730,39 @@ export function TrafficChart({
                 />
                 <RechartsTooltip
                   content={<CustomTooltipContent />}
-                  cursor={{ stroke: "hsl(0, 0%, 20%)" }}
+                  cursor={{ stroke: "hsl(0, 0%, 30%)", strokeOpacity: 0.3 }}
                 />
                 <Scatter
                   data={chartData}
                   fill="hsl(0, 75%, 55%)"
                   name="Total Requests"
                 />
+                {pinnedDate && (
+                  <ReferenceLine
+                    x={pinnedDate}
+                    stroke="hsl(0, 75%, 55%)"
+                    strokeDasharray="4 4"
+                    strokeOpacity={0.6}
+                    label={{
+                      position: "top",
+                      content: ({ viewBox }) => {
+                        const { x } = viewBox as { x: number };
+                        return (
+                          <g transform={`translate(${x - 8}, -4)`}>
+                            <svg
+                              width="16"
+                              height="16"
+                              viewBox="0 0 24 24"
+                              fill="hsl(0, 75%, 55%)"
+                            >
+                              <path d="M11 14.5h2v-2.275l1.95 1.15l1-1.75L14 10.5l1.95-1.125l-1-1.75L13 8.775V6.5h-2v2.275l-1.95-1.15l-1 1.75L10 10.5l-1.95 1.125l1 1.75l1.95-1.15Zm1 7.5q-4.025-3.425-6.012-6.363Q4 12.7 4 10.2q0-3.75 2.413-5.975Q8.825 2 12 2t5.587 2.225Q20 6.45 20 10.2q0 2.5-1.987 5.437Q16.025 18.575 12 22Z" />
+                            </svg>
+                          </g>
+                        );
+                      },
+                    }}
+                  />
+                )}
               </ScatterChart>
             </ResponsiveContainer>
           )}
