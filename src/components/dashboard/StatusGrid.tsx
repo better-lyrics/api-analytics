@@ -21,14 +21,16 @@ interface StatusGridProps {
   ready: boolean;
 }
 
-function getCircuitBreakerIcon(state: "CLOSED" | "OPEN" | "HALF_OPEN") {
+function getCircuitBreakerIcon(state: "CLOSED" | "OPEN" | "HALF-OPEN") {
   switch (state) {
     case "CLOSED":
       return Bone01Icon;
-    case "HALF_OPEN":
+    case "HALF-OPEN":
       return Bone02Icon;
     case "OPEN":
       return BrokenBoneIcon;
+    default:
+      return Bone01Icon;
   }
 }
 
@@ -276,7 +278,11 @@ export function StatusGrid({
         <p className="text-xs text-muted-foreground mt-2">
           <NumberFlow
             value={
-              ready ? (isDelta ? deltaSum.storage.keys : snapshot.cache.keys) : 0
+              ready
+                ? isDelta
+                  ? deltaSum.storage.keys
+                  : snapshot.cache.keys
+                : 0
             }
             className="font-mono"
           />{" "}
