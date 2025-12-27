@@ -19,7 +19,7 @@ export interface StatsApiResponse {
   circuit_breaker: {
     cooldown_remaining: string;
     failures: number;
-    state: "CLOSED" | "OPEN" | "HALF_OPEN";
+    state: "CLOSED" | "OPEN" | "HALF-OPEN";
   };
   rate_limiting: {
     cached_tier: number;
@@ -97,7 +97,7 @@ export interface AnalyticsSnapshot {
     storage_mb: number;
   };
   circuit_breaker: {
-    state: "CLOSED" | "OPEN" | "HALF_OPEN";
+    state: "CLOSED" | "OPEN" | "HALF-OPEN";
     cooldown_remaining: number;
     failures: number;
   };

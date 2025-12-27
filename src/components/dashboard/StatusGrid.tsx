@@ -66,7 +66,7 @@ export function StatusGrid({
           <span className="font-mono text-primary">
             {circuitBreakerState === "CLOSED"
               ? "Healthy"
-              : circuitBreakerState === "HALF_OPEN"
+              : circuitBreakerState === "HALF-OPEN"
               ? "Recovering"
               : "Tripped"}
           </span>
